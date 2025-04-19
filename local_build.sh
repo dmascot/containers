@@ -19,17 +19,20 @@ run_local_build(){
     local build_data
     build_data=$(gen_build_data "$image" "$dry_run" --output)
 
-    BUILD_VERSION=$(jq -r .BUILD_VERSION <<< "$build_data")
-    BUILD_ARGS=$(jq -r .BUILD_ARGS <<< "$build_data")
+    IMAGE_DATA=$(jq -r .IMAGE_DATA <<< "$build_data")
+    
+    BUILD_VERSION=$(jq -r .IMAGE_DATA.BUILD_VERSION <<< "$build_data")
     SHOULD_BUILD=$(jq -r .SHOULD_BUILD <<< "$build_data")
     
+    BUILD_ARGS=$(jq -r '.BUILD_ARGS // [] | map("--build-arg " + .) | join(" ")' <<< "$build_data")
+
     if [[ "$SHOULD_BUILD" == true ]]; then
         info "🛠 Rebuilding image: $image (version: $BUILD_VERSION)"
         info "Running: docker build $BUILD_ARGS -t $image:$BUILD_VERSION $image_dir"
         if [[ "$dry_run" == false ]]; then
             docker build $BUILD_ARGS -t "$image:$BUILD_VERSION" "$image_dir"
             docker tag "$image:$BUILD_VERSION" "$image:latest"
-            write_metadata "$image" "$BUILD_VERSION"
+            write_metadata "$image" "$IMAGE_DATA"
             info "Build complete: $image:$BUILD_VERSION and :latest"
         else
             info "[DRY RUN] Would build: $image:$BUILD_VERSION"

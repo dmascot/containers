@@ -1,0 +1,52 @@
+name: Reuseable Create Pull Request
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        required: true
+        type: string
+      title:
+        required: false
+        type: string
+        default: "chore: update build-info.json"
+      body:
+        required: false
+        type: string
+        default: "This PR contains updated build metadata."
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0
+
+      - name: Ensure "delete branch on merge" is enabled
+        run: |
+          curl -X PATCH \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }} \
+            -d '{"delete_branch_on_merge": true}'
+
+      - name: Ensure branch is up-to-date
+        run: |
+          git fetch origin ${{ inputs.branch }}
+          git pull origin ${{ inputs.branch }}
+
+      - name: Create PR using gh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+              --title "${{ inputs.title }}" \
+              --body "${{ inputs.body }}" \
+              --base main \
+              --head "${{ inputs.branch }}"

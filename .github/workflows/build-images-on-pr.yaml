@@ -1,0 +1,50 @@
+name: Build Images on PR
+
+on:
+  pull_request:
+    paths:
+      - 'images/**'
+
+jobs:
+  detect-changed-images:
+    runs-on: ubuntu-latest
+    outputs:
+      image_dirs: ${{ steps.changed.outputs.image_dirs }}
+      should_build: ${{ steps.changed.outputs.should_build }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Detect image directory changes
+        id: changed
+        run: |
+          changed_files=$(git diff --name-only origin/main...HEAD)
+          echo "Changed files:"
+          echo "$changed_files"
+
+          image_dirs=$(echo "$changed_files" | grep '^images/' | awk -F '/' '{print $2}' | sort -u | jq -R . | jq -cs .)
+          
+          if [ "$image_dirs" == "[]" ] || [ -z "$image_dirs" ]; then
+            echo "No image-specific changes found."
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Found changes in image directories: $image_dirs"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "image_dirs=$image_dirs" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: detect-changed-images
+    if: needs.detect-changed-images.outputs.should_build == 'true'
+    strategy:
+      matrix:
+        image: ${{ fromJson(needs.detect-changed-images.outputs.image_dirs) }}
+    uses: ./.github/workflows/_build-and-push.yaml
+    with:
+      image: ${{ matrix.image }}
+      branch: ${{ github.head_ref }}
+    secrets:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}

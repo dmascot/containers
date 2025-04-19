@@ -1,14 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 
-META_DATA_FILE="$(dirname "$0")/build-info.json"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-source "$(dirname "$0")/common.sh"
+META_DATA_FILE="$SCRIPT_DIR/build-info.json"
+source "$SCRIPT_DIR/common.sh"
 
 gen_build_data(){
   local image=${1:-}
-  local output_mode="${3:-}"
   local dry_run=${2:-false}
+  local output_mode="${3:-}"
 
   [[ -z "$image" ]] && usage
   [[ "$output_mode" == "--dry-run" ]] && dry_run=true
@@ -27,8 +28,8 @@ gen_build_data(){
   local result
   result="$(build_image_data "$image_dir")"
 
-  if ! jq -e 'has("BUILD_VERSION")' <<< "$result" > /dev/null; then
-    error "BUILD_VERSION missing in build_image_data output" >&2
+  if ! jq -e '.IMAGE_DATA | has("BUILD_VERSION")' <<< "$result" > /dev/null; then
+    error "BUILD_VERSION missing in IMAGE_DATA" >&2
     exit 1
   fi
 
@@ -36,7 +37,7 @@ gen_build_data(){
     result=$(jq '. + {BUILD_ARGS: ""}' <<< "$result")
   fi
   
-  BUILD_VERSION=$(jq -r .BUILD_VERSION <<< "$result")
+  BUILD_VERSION=$(jq -r .IMAGE_DATA.BUILD_VERSION <<< "$result")
   
   SHOULD_BUILD=false
   if [[ "$previous_version" != "$BUILD_VERSION" ]]; then
