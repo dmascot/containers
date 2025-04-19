@@ -1,0 +1,41 @@
+name: Manual Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: "Name of the image to build (e.g., 'asdf')"
+        required: true
+        type: string
+
+jobs:
+  generate-branch-name:
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.out.outputs.branch }}
+    steps:
+      - name: Generate unique branch name
+        id: out
+        run: |
+          BRANCH="manual-update-${{ github.event.inputs.image }}-$(date +%Y%m%d%H%M)"
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+  build:
+    needs: generate-branch-name
+    uses: ./.github/workflows/_build-and-push.yaml
+    with:
+      image: ${{ github.event.inputs.image }}
+      branch: ${{ needs.generate-branch-name.outputs.branch }}
+    secrets:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+
+  create-pr:
+    needs:
+      - generate-branch-name 
+      - build
+    if: needs.build.outputs.should_build == 'true'
+    uses: ./.github/workflows/_create_pr.yaml
+    with:
+      branch: ${{ needs.generate-branch-name.outputs.branch }}
+      title: "chore(${{ github.event.inputs.image }}): update build-info.json after manual build"
+      body: "This PR includes build-info.json updates for image `${{ github.event.inputs.image }}` triggered via manual workflow."

@@ -20,9 +20,10 @@ run_local_build(){
     build_data=$(gen_build_data "$image" "$dry_run" --output)
 
     BUILD_VERSION=$(jq -r .BUILD_VERSION <<< "$build_data")
-    BUILD_ARGS=$(jq -r .BUILD_ARGS <<< "$build_data")
     SHOULD_BUILD=$(jq -r .SHOULD_BUILD <<< "$build_data")
     
+    BUILD_ARGS=$(jq -r '.BUILD_ARGS // [] | map("--build-arg " + .) | join(" ")' <<< "$build_data")
+
     if [[ "$SHOULD_BUILD" == true ]]; then
         info "🛠 Rebuilding image: $image (version: $BUILD_VERSION)"
         info "Running: docker build $BUILD_ARGS -t $image:$BUILD_VERSION $image_dir"

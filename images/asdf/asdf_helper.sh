@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 install_asdf(){
     local version="$1"

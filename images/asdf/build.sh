@@ -40,13 +40,10 @@ build_image_data() {
 
   local build_version
   build_version=$(_generate_build_version "$alpine_release" "$asdf_release")
-  local release_tag="asdf:${build_version}"
-
-  local build_args
-  build_args="--build-arg ALPINE_VERSION=${alpine_release} --build-arg ASDF_VERSION=${asdf_release}"
 
   jq -n \
     --arg version "$build_version" \
-    --arg args "$build_args" \
-    '{BUILD_VERSION: $version, BUILD_ARGS: $args}'
+    --arg alpine "ALPINE_VERSION=${alpine_release}" \
+    --arg asdf "ASDF_VERSION=${asdf_release}" \
+    '{BUILD_VERSION: $version, BUILD_ARGS: [$alpine, $asdf]}'
 }

@@ -6,8 +6,10 @@ ARG ASDF_VERSION
 
 ADD asdf_helper.sh /usr/local/share/asdf_helper
 
-RUN source /usr/local/share/asdf_helper && \ 
-install_asdf ${ASDF_VERSION} && \
-echo "source /usr/local/share/asdf_helper" >> /etc/profile.d/asdf_helper
+RUN export ASDF_VERSION="$ASDF_VERSION" && \
+    . /usr/local/share/asdf_helper && \
+    echo "ASDF_VERSION=${ASDF_VERSION}" && \
+    install_asdf "$ASDF_VERSION" && \
+    echo ". /usr/local/share/asdf_helper" >> /etc/profile.d/asdf_helper
 
 CMD ["/bin/ash","--login"]

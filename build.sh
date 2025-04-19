@@ -1,9 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-META_DATA_FILE="$(dirname "$0")/build-info.json"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-source "$(dirname "$0")/common.sh"
+META_DATA_FILE="$SCRIPT_DIR/build-info.json"
+source "$SCRIPT_DIR/common.sh"
 
 gen_build_data(){
   local image=${1:-}

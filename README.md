@@ -48,7 +48,7 @@ GitHub Actions uses `.github/workflows/_build-and-push.yml` to build and push mu
 ## ➕ Adding a New Image
   1. Create a new folder under images/, e.g. images/mytool/
   2. Add a Dockerfile with your image definition.
-  3. Create a build.sh file with the following structure. Ensure function name to be same i.e. `build_image_data` and, it ouputs json string as fillows ```json { "BUILD_VERSION": VersionString, "BUILD_ARGS": BuildArgs }```
+  3. Create a build.sh file with the following structure. Ensure function name to be same i.e. `build_image_data` and, it ouputs json string as fillows ```json { "BUILD_VERSION": VersionString, "BUILD_ARGS": ["KEY_1=VALUE_1","KEY_2=VALUE_2",...] }```
 
 ```bash
     #!/bin/bash
@@ -59,18 +59,16 @@ GitHub Actions uses `.github/workflows/_build-and-push.yml` to build and push mu
 
     # Example version detection
     local BUILD_VERSION="1.0.0"
-    
-    #Example docker build args to be added
-    local BUILD_ARGS="--build-arg BUILD_VERSION=$BUILD_VERSION"
+    local TOOL_VERSION="0.0.2"
 
     jq -n \
-        --arg version "$BUILD_VERSION" \
-        --arg args "$BUILD_ARGS" \
-        '{BUILD_VERSION: $version, BUILD_ARGS: $args}'
+        --arg build_version "$BUILD_VERSION" \
+        --arg tool_version "TOOL_VERSION=${TOOL_VERSION}" \
+        '{BUILD_VERSION: $build_version, BUILD_ARGS: [$tool_version]}'
     } 
 ```
   4. Ensure BUILD_VERSION is present in the file, if not you will see an error.
-  5. BUILD_ARGS are optional and, it is a string which is not limited to `--build-arg` you can add any other valid `docker build` options here for build time
+  5. BUILD_ARGS are optional and, it is limited to `--build-arg`. You can not use it to pass any other option
    
 ## 🤝 Contributing
 
@@ -83,3 +81,5 @@ https://hub.docker.com/u/dmascot
 
 ## Improvements
 - run vulnerability scan
+- support force build, i.e. even if build.json says we have it build already
+- Manager other docker build options if needed (i.e. apart from --build-arg)
