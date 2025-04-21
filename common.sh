@@ -70,21 +70,21 @@ ensure_metadata_exists() {
 
 write_metadata() {
   local image="$1"
-  local version="$2"
+  local image_data="$2"
   ensure_metadata_exists
 
   local tmp_file
   tmp_file=$(mktemp)
   trap 'rm -f "$tmp_file"' EXIT
 
-  jq --arg key "$image" --arg val "$version" '.[$key] = $val' "$META_DATA_FILE" > "$tmp_file" && mv "$tmp_file" "$META_DATA_FILE"
+  jq --arg key "$image" --argjson val "$image_data" '.[$key] = $val' "$META_DATA_FILE" > "$tmp_file" && mv "$tmp_file" "$META_DATA_FILE"
   trap - EXIT
 }
 
 read_metadata_version() {
   local image="$1"
   ensure_metadata_exists
-  jq -r --arg key "$image" '.[$key] // empty' "$META_DATA_FILE"
+  jq -r --arg key "$image" '.[$key].BUILD_VERSION // empty' "$META_DATA_FILE"
 }
 
 compute_patch_bump() {
@@ -92,8 +92,8 @@ compute_patch_bump() {
   local context_path="$2"
 
   if git diff --quiet origin/main -- "$context_path"; then
-    echo "$docker_patch"
+    echo 0
   else
-    echo $((docker_patch + 1))
+    echo 1
   fi
 }

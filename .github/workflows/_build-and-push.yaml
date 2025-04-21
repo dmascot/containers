@@ -46,8 +46,11 @@ jobs:
           source ./build.sh
           result=$(gen_build_data ${{ inputs.image }} false --output)
           echo "$result" > meta.json
-      
-          build_version=$(jq -r .BUILD_VERSION < meta.json)
+          
+          image_data=$(jq -c .IMAGE_DATA < meta.json)
+          echo "image_data=$image_data" >> "$GITHUB_OUTPUT"
+          
+          build_version=$(jq -r .IMAGE_DATA.BUILD_VERSION < meta.json)
           should_build=$(jq -r .SHOULD_BUILD < meta.json)
      
           echo "build_version=$build_version" >> "$GITHUB_OUTPUT"
@@ -80,7 +83,7 @@ jobs:
           git fetch origin ${{ inputs.branch }} || true
           git checkout ${{ inputs.branch }} || git checkout -b ${{ inputs.branch }}
           source ./common.sh
-          write_metadata "${{ inputs.image }}" "${{ steps.meta.outputs.build_version }}"
+          write_metadata "${{ inputs.image }}" "${{ steps.meta.outputs.image_data }}"
           git add build-info.json
           git commit -m "chore(${{ inputs.image }}): update version to ${{ steps.meta.outputs.build_version }} in build-info.json after ${{ github.job }}"
           git push --set-upstream origin ${{ inputs.branch }}
