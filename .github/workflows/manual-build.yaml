@@ -19,6 +19,7 @@ jobs:
         run: |
           BRANCH="manual-update-${{ github.event.inputs.image }}-$(date +%Y%m%d%H%M)"
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
   build:
     needs: generate-branch-name
     uses: ./.github/workflows/_build-and-push.yaml
