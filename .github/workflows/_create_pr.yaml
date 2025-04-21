@@ -1,4 +1,4 @@
-name: Create Pull Request
+name: Reuseable Create Pull Request
 
 permissions:
   contents: write

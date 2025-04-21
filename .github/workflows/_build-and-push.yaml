@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Reuseable Build and Push Docker Image
 
 on:
   workflow_call:
@@ -78,7 +78,7 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git fetch origin ${{ inputs.branch }} || true
-          git checkout -B ${{ inputs.branch }}
+          git checkout ${{ inputs.branch }} || git checkout -b ${{ inputs.branch }}
           source ./common.sh
           write_metadata "${{ inputs.image }}" "${{ steps.meta.outputs.build_version }}"
           git add build-info.json
