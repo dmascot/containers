@@ -82,7 +82,7 @@ jobs:
           source ./common.sh
           write_metadata "${{ inputs.image }}" "${{ steps.meta.outputs.build_version }}"
           git add build-info.json
-          git commit -m "chore(${{ inputs.image }}): update version to ${{ steps.meta.outputs.build_version }} in build-info.json after manual build"
+          git commit -m "chore(${{ inputs.image }}): update version to ${{ steps.meta.outputs.build_version }} in build-info.json after ${{ github.job }}"
           git push --set-upstream origin ${{ inputs.branch }}
 
 
