@@ -40,13 +40,20 @@ require_command() {
 
 fetch_latest_container_release_tag() {
   local repo="$1"
-  local latest_digest latest_tag
 
-  latest_digest=$(curl -s "https://registry.hub.docker.com/v2/repositories/${repo}/tags/latest" | jq -r '.digest')
+  local latest_digest
+  latest_digest=$(curl -s "https://registry.hub.docker.com/v2/repositories/${repo}/tags/latest" | jq -r '.digest // empty')
+
+  if [[ -z "$latest_digest" ]]; then
+    echo "0"
+    return
+  fi
+
+  local latest_tag
   latest_tag=$(curl -s "https://registry.hub.docker.com/v2/repositories/${repo}/tags?page_size=100" | \
     jq -r --arg digest "$latest_digest" '.results[] | select(.digest == $digest) | select(.name != "latest") | .name' | head -1)
 
-  echo "${latest_tag}"
+  echo "${latest_tag:-0}"
 }
 
 fetch_latest_github_release_tag() {
@@ -78,4 +85,15 @@ read_metadata_version() {
   local image="$1"
   ensure_metadata_exists
   jq -r --arg key "$image" '.[$key] // empty' "$META_DATA_FILE"
+}
+
+compute_patch_bump() {
+  local docker_patch="$1"
+  local context_path="$2"
+
+  if git diff --quiet origin/main -- "$context_path"; then
+    echo "$docker_patch"
+  else
+    echo $((docker_patch + 1))
+  fi
 }
