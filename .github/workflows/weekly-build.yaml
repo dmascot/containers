@@ -20,14 +20,16 @@ jobs:
   generate-image-directory-list:
     runs-on: ubuntu-latest
     needs: generate-branch-name
+    outputs:
+      image_dirs: ${{ steps.list.outputs.image_dirs }}
     steps:
       - uses: actions/checkout@v3
 
       - name: Generate image directory list
         id: list
         run: |
-          dirs=$(find images -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | jq -R . | jq -s .)
-          echo "dirs=$dirs" >> $GITHUB_OUTPUT
+          image_dirs=$(find images -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | jq -R . | jq -cs .)
+          echo "image_dirs=$image_dirs" >> $GITHUB_OUTPUT
 
   build:
     needs: 
@@ -35,7 +37,7 @@ jobs:
       - generate-image-directory-list
     strategy:
       matrix:
-        image: ${{ fromJson(needs.generate-image-directory-list.outputs.dirs) }}
+        image: ${{ fromJson(needs.generate-image-directory-list.outputs.image_dirs) }}
     uses: ./.github/workflows/_build-and-push.yaml
     with:
       image: ${{ matrix.image }}
