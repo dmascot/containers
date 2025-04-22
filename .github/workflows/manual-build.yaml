@@ -26,6 +26,7 @@ jobs:
     with:
       image: ${{ github.event.inputs.image }}
       branch: ${{ needs.generate-branch-name.outputs.branch }}
+      docker_build_branch: ${{ github.ref_head }}
     secrets:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
