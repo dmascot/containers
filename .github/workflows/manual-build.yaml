@@ -30,14 +30,6 @@ jobs:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
 
-  debug:
-    runs-on: ubuntu-latest
-    needs: 
-      - build
-    steps:
-      - name: SHOULD_BUILD output
-        run: echo "should_build=${{ needs.build.outputs.should_build }}"
-
   create-pr:
     needs:
       - generate-branch-name 
