@@ -24,28 +24,24 @@ install_asdf(){
 
     echo "Installing asdf ${version} for ${os}-${arch}"
 
-    ASDF_HOME="/usr/local/share/asdf"
-    ASDF_BIN_DIR="$ASDF_HOME/bin"
-    ASDF_DATA_DIR="$ASDF_HOME/data"
+    ASDF_BIN_DIR="/usr/bin"
 
-    mkdir -p "$ASDF_BIN_DIR"
-    mkdir -p "$ASDF_DATA_DIR"
-
+    
     asdf_bin_file="asdf-${version}-${os}-${arch}.tar.gz"
     url="https://github.com/asdf-vm/asdf/releases/download/${version}/$asdf_bin_file"
 
     wget "$url" 
     tar -xf $asdf_bin_file -C "$ASDF_BIN_DIR"
     rm $asdf_bin_file
-    
-    profile_file="/etc/profile.d/asdf.sh"
-    touch $profile_file
-    echo 'export ASDF_HOME="/usr/local/share/asdf"'  >> $profile_file
-    echo 'export ASDF_BIN_DIR="$ASDF_HOME/bin"' >> $profile_file
-    echo 'export ASDF_DATA_DIR="$ASDF_HOME/data"' >> $profile_file
-    echo 'export PATH="$ASDF_BIN_DIR:$ASDF_DATA_DIR/shims:$PATH"' >> $profile_file
 
-    echo '. /etc/profile' >> /root/.profile
+    ASDF_PROFILE='/etc/profile.d/asdf.sh'
+    ASDF_COMPLETION='/etc/profile.d/asdf_completion.sh'
+    touch $ASDF_PROFILE
+    echo '# ASDF PATH'
+    echo 'export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"' >> $ASDF_PROFILE
+    echo '# ASDF completion' >> $ASDF_COMPLETION
+    asdf completion bash >> $ASDF_COMPLETION
+    echo '. /etc/profile' >> "$HOME/.profile" 
 }
 
 verify_asdf(){

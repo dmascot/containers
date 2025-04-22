@@ -13,4 +13,6 @@ RUN apk add --no-cache bash git && \
     install_asdf "$ASDF_VERSION" && \
     echo ". /usr/local/share/asdf_helper" >> /etc/profile.d/asdf_helper
 
-CMD ["/bin/ash","--login"]
+SHELL [ "/bin/bash","-l" ]
+
+CMD ["/bin/bash","-l"]
