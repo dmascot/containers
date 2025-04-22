@@ -6,7 +6,8 @@ ARG ASDF_VERSION
 
 ADD asdf_helper.sh /usr/local/share/asdf_helper
 
-RUN export ASDF_VERSION="$ASDF_VERSION" && \
+RUN apk add --no-cache bash && \
+    export ASDF_VERSION="$ASDF_VERSION" && \
     . /usr/local/share/asdf_helper && \
     echo "ASDF_VERSION=${ASDF_VERSION}" && \
     install_asdf "$ASDF_VERSION" && \
