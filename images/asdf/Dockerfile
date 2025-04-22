@@ -6,7 +6,7 @@ ARG ASDF_VERSION
 
 ADD asdf_helper.sh /usr/local/share/asdf_helper
 
-RUN apk add --no-cache bash && \
+RUN apk add --no-cache bash git && \
     export ASDF_VERSION="$ASDF_VERSION" && \
     . /usr/local/share/asdf_helper && \
     echo "ASDF_VERSION=${ASDF_VERSION}" && \
