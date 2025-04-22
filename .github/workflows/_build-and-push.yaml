@@ -55,6 +55,7 @@ jobs:
       - name: Run build logic
         id: meta
         run: |
+          echo "Using build branch: ${{ inputs.docker_build_branch }}"
           export DEBUG=true
           source ./build.sh
           result=$(gen_build_data ${{ inputs.image }} false --output)

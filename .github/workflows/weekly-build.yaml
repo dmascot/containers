@@ -42,6 +42,7 @@ jobs:
     with:
       image: ${{ matrix.image }}
       branch: ${{ needs.generate-branch-name.outputs.branch }}
+      docker_build_branch: ${{ github.head_ref }}
     secrets:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
