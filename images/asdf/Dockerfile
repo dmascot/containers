@@ -14,6 +14,7 @@ RUN export ASDF_VERSION="$ASDF_VERSION" && \
     . /usr/local/share/asdf_helper && \
     echo "ASDF_VERSION=${ASDF_VERSION}" && \
     install_asdf "$ASDF_VERSION" && \
-    echo ". /usr/local/share/asdf_helper" > /etc/profile.d/asdf_helper.sh
+    echo ". /usr/local/share/asdf_helper" > /etc/profile.d/asdf_helper.sh && \
+    . /usr/local/share/asdf_helper && source_asdf_scripts
 
 ENTRYPOINT [ "/bin/bash" ]

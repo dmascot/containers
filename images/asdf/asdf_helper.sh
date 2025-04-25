@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+ASDF_PATH_SCRIPT='/etc/profile.d/asdf_path.sh'
+ASDF_COMPLETION_SCRIPT='/etc/profile.d/asdf_completion.sh'
+
 install_asdf(){
     local version="$1"
     if [ -z "$version" ]; then
@@ -38,21 +41,11 @@ install_asdf(){
     tar -xf "$asdf_bin_file" -C "$ASDF_BIN_DIR"
     rm "$asdf_bin_file"
 
-    asdf completion bash > /etc/profile.d/asdf_completion.sh
+    asdf completion bash > $ASDF_COMPLETION_SCRIPT
 
     #Set ASDF Binary paths
-    echo 'export ASDF_DIR="$HOME/.asdf"' >> /etc/profile.d/asdf_path.sh 
-    echo 'export PATH="$ASDF_DIR/bin:$ASDF_DIR/shims:$PATH"' >> /etc/profile.d/asdf_path.sh 
-
-    cat <<'EOF' | tee /etc/bash.bashrc > /dev/null
-#!/usr/bin/env bash
-# Load profile.d scripts
-for f in /etc/profile.d/*.sh; do
-    [ -r "$f" ] && . "$f"
-done
-EOF
-
-    grep -qxF '[ -f /etc/bash.bashrc ] && . /etc/bash.bashrc' "${HOME}/.bashrc" || echo '[ -f /etc/bash.bashrc ] && . /etc/bash.bashrc' >> "${HOME}/.bashrc"
+    echo 'export ASDF_DIR="$HOME/.asdf"' >> $ASDF_PATH_SCRIPT
+    echo 'export PATH="$ASDF_DIR/bin:$ASDF_DIR/shims:$PATH"' >> $ASDF_PATH_SCRIPT
 }
 
 asdf_install() {
@@ -63,7 +56,7 @@ asdf_install() {
         exit 1
     fi
 
-    if -f tool_versions_file="$HOME/.tool-versions"; then 
+    if [[ -f $tool_versions_file ]]; then 
         ORIGINAL_IFS="$IFS"
 
         while IFS= read -r line || [[ -n "$line" ]]; do
@@ -92,4 +85,28 @@ asdf_install() {
 verify_asdf(){
     local version=$(asdf version)
     echo "ASDF Version: $version"
+}
+
+#This helper creates and sources asdf path and completion
+source_asdf_scripts(){
+
+    local  bashrc="${HOME}/.bashrc"
+    local asdf_helper='/usr/local/share/asdf_helper'
+    if ! grep -qF ". $ASDF_PATH_SCRIPT" "${bashrc}"; then
+        echo "" >>  "${bashrc}"
+        echo ". $ASDF_PATH_SCRIPT" >> "${bashrc}"
+        echo "" >> "${bashrc}"
+    fi
+
+    if ! grep -qF ". $asdf_helper" "${bashrc}"; then
+        echo "" >> "${bashrc}"
+         echo ". $asdf_helper" >> "${bashrc}"
+        echo "" >> "${bashrc}"
+    fi 
+    if ! grep -qF ". $ASDF_COMPLETION_SCRIPT" "${bashrc}"; then
+        echo ". $ASDF_COMPLETION_SCRIPT" >> "${bashrc}"
+        echo "" >> "${bashrc}"
+    fi
+
+    . $bashrc
 }
