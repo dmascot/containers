@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 install_asdf(){
@@ -24,12 +24,7 @@ install_asdf(){
 
     echo "Installing asdf ${version} for ${os}-${arch}"
 
-    ASDF_HOME="/usr/local/share/asdf"
-    ASDF_BIN_DIR="$ASDF_HOME/bin"
-    ASDF_DATA_DIR="$ASDF_HOME/data"
-
-    mkdir -p "$ASDF_BIN_DIR"
-    mkdir -p "$ASDF_DATA_DIR"
+    ASDF_BIN_DIR="/usr/bin"
 
     asdf_bin_file="asdf-${version}-${os}-${arch}.tar.gz"
     url="https://github.com/asdf-vm/asdf/releases/download/${version}/$asdf_bin_file"
@@ -43,15 +38,14 @@ install_asdf(){
     tar -xf "$asdf_bin_file" -C "$ASDF_BIN_DIR"
     rm "$asdf_bin_file"
 
-    profile_file="/etc/profile.d/asdf.sh"
-    touch "$profile_file"
-    echo 'export ASDF_HOME="/usr/local/share/asdf"'  >> "$profile_file"
-    echo 'export ASDF_BIN_DIR="$ASDF_HOME/bin"' >> "$profile_file"
-    echo 'export ASDF_DATA_DIR="$ASDF_HOME/data"' >> "$profile_file"
-    echo 'export PATH="$ASDF_BIN_DIR:$ASDF_DATA_DIR/shims:$PATH"' >> "$profile_file"
+    asdf completion bash > /etc/profile.d/asdf_completion.sh
+
+    #Set ASDF Binary paths
+    echo 'export ASDF_DIR="$HOME/.asdf"' >> /etc/profile.d/asdf_path.sh 
+    echo 'export PATH="$ASDF_DIR/bin:$ASDF_DIR/shims:$PATH"' >> /etc/profile.d/asdf_path.sh 
 
     cat <<'EOF' | tee /etc/bash.bashrc > /dev/null
-#!/bin/sh
+#!/usr/bin/env bash
 # Load profile.d scripts
 for f in /etc/profile.d/*.sh; do
     [ -r "$f" ] && . "$f"
@@ -61,8 +55,41 @@ EOF
     grep -qxF '[ -f /etc/bash.bashrc ] && . /etc/bash.bashrc' "${HOME}/.bashrc" || echo '[ -f /etc/bash.bashrc ] && . /etc/bash.bashrc' >> "${HOME}/.bashrc"
 }
 
+asdf_install() {
+    local tool_versions_file="$HOME/.tool-versions"
+
+    if ! command -v asdf >/dev/null 2>&1; then
+        echo "asdf not installed, please install it first"
+        exit 1
+    fi
+
+    if -f tool_versions_file="$HOME/.tool-versions"; then 
+        ORIGINAL_IFS="$IFS"
+
+        while IFS= read -r line || [[ -n "$line" ]]; do
+            # Skip empty lines or comments
+            [[ -z "$line" || "$line" == \#* ]] && continue
+
+            plugin=$(awk '{print $1}' <<< "$line")
+            version=$(awk '{print $2}' <<< "$line")
+
+            echo "Ensuring plugin '$plugin' is installed..."
+            if ! asdf plugin list | grep -q "^${plugin}$"; then
+                echo "Installing plugin: $plugin"
+                asdf plugin add "$plugin"
+            fi
+
+            echo "Installing $plugin@$version"
+            asdf install "$plugin" "$version"
+        done < "$tool_versions_file"
+
+        IFS="$ORIGINAL_IFS"
+    else
+        echo "you need to have $HOME/.tool-versions file in place to use this command";
+    fi 
+}
+
 verify_asdf(){
-    source /etc/profile
     local version=$(asdf version)
     echo "ASDF Version: $version"
 }
