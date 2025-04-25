@@ -4,14 +4,17 @@ FROM alpine:${ALPINE_VERSION:-3.21.0}
 
 ARG ASDF_VERSION
 
-ADD asdf_helper.sh /usr/local/share/asdf_helper
+COPY asdf_helper.sh /usr/local/share/asdf_helper
+COPY asdfrc.sh /etc/profile.d/asdfrc.sh
+
+ENV ASDF_RC='/etc/profile.d/asdfrc.sh'
 
 RUN apk add --no-cache bash git
 
 SHELL [ "/bin/bash","-c" ]
 
 RUN export ASDF_VERSION="$ASDF_VERSION" && \
-    . /usr/local/share/asdf_helper && \
+    chmod +x ${ASDF_RC} && \
+    . ${ASDF_RC} && \
     echo "ASDF_VERSION=${ASDF_VERSION}" && \
-    install_asdf "$ASDF_VERSION" && \
-    echo ". /usr/local/share/asdf_helper" > /etc/profile.d/asdf_helper.sh
+    install_asdf "$ASDF_VERSION"
