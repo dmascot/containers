@@ -34,18 +34,31 @@ install_asdf(){
     asdf_bin_file="asdf-${version}-${os}-${arch}.tar.gz"
     url="https://github.com/asdf-vm/asdf/releases/download/${version}/$asdf_bin_file"
 
-    wget "$url" 
-    tar -xf $asdf_bin_file -C "$ASDF_BIN_DIR"
-    rm $asdf_bin_file
-    
-    profile_file="/etc/profile.d/asdf.sh"
-    touch $profile_file
-    echo 'export ASDF_HOME="/usr/local/share/asdf"'  >> $profile_file
-    echo 'export ASDF_BIN_DIR="$ASDF_HOME/bin"' >> $profile_file
-    echo 'export ASDF_DATA_DIR="$ASDF_HOME/data"' >> $profile_file
-    echo 'export PATH="$ASDF_BIN_DIR:$ASDF_DATA_DIR/shims:$PATH"' >> $profile_file
+    command -v wget >/dev/null 2>&1 || { echo "wget is required but not installed"; exit 1; }
 
-    echo '. /etc/profile' >> /root/.profile
+    # Clean up the tarball even if the script exits early
+    trap 'rm -f "$asdf_bin_file"' EXIT
+
+    wget "$url" 
+    tar -xf "$asdf_bin_file" -C "$ASDF_BIN_DIR"
+    rm "$asdf_bin_file"
+
+    profile_file="/etc/profile.d/asdf.sh"
+    touch "$profile_file"
+    echo 'export ASDF_HOME="/usr/local/share/asdf"'  >> "$profile_file"
+    echo 'export ASDF_BIN_DIR="$ASDF_HOME/bin"' >> "$profile_file"
+    echo 'export ASDF_DATA_DIR="$ASDF_HOME/data"' >> "$profile_file"
+    echo 'export PATH="$ASDF_BIN_DIR:$ASDF_DATA_DIR/shims:$PATH"' >> "$profile_file"
+
+    cat <<'EOF' | tee /etc/bash.bashrc > /dev/null
+#!/bin/sh
+# Load profile.d scripts
+for f in /etc/profile.d/*.sh; do
+    [ -r "$f" ] && . "$f"
+done
+EOF
+
+    grep -qxF '[ -f /etc/bash.bashrc ] && . /etc/bash.bashrc' "${HOME}/.bashrc" || echo '[ -f /etc/bash.bashrc ] && . /etc/bash.bashrc' >> "${HOME}/.bashrc"
 }
 
 verify_asdf(){
