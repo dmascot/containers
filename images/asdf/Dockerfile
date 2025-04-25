@@ -6,13 +6,14 @@ ARG ASDF_VERSION
 
 ADD asdf_helper.sh /usr/local/share/asdf_helper
 
-RUN apk add --no-cache bash git && \
-    export ASDF_VERSION="$ASDF_VERSION" && \
+RUN apk add --no-cache bash git
+
+SHELL [ "/bin/bash","-c" ]
+
+RUN export ASDF_VERSION="$ASDF_VERSION" && \
     . /usr/local/share/asdf_helper && \
     echo "ASDF_VERSION=${ASDF_VERSION}" && \
     install_asdf "$ASDF_VERSION" && \
-    echo ". /usr/local/share/asdf_helper" >> /etc/profile.d/asdf_helper
-
-SHELL [ "/bin/bash","-c" ]
+    echo ". /usr/local/share/asdf_helper" > /etc/profile.d/asdf_helper.sh
 
 ENTRYPOINT [ "/bin/bash" ]
