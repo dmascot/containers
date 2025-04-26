@@ -23,7 +23,7 @@ jobs:
     outputs:
       image_dirs: ${{ steps.list.outputs.image_dirs }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Generate image directory list
         id: list
@@ -53,7 +53,7 @@ jobs:
     outputs:
       should_continue: ${{ steps.diff.outputs.should_continue }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
   
