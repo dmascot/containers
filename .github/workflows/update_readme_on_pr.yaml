@@ -51,6 +51,6 @@ jobs:
         with:
           repository: dmascot/${{ steps.extract.outputs.image_name }}
           readme_path: ${{ matrix.readme_file }}
-        secrets:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+          secrets:
+            DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+            DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
