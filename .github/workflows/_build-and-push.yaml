@@ -12,6 +12,11 @@ on:
         required: true
         type: string
 
+      docker_build_branch:
+        description: "Branch from which to use Dockerfile"
+        required: true
+        type: string
+
     secrets:
       DOCKER_USERNAME:
         required: true
@@ -31,7 +36,10 @@ jobs:
             
     steps:
       - uses: actions/checkout@v4
-
+        with:
+          ref: ${{ inputs.docker_build_branch }}
+          fetch-depth: 0
+          
       - name: Set up QEMU for multi-arch builds
         uses: docker/setup-qemu-action@v3
 

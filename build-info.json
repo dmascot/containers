@@ -1,0 +1,7 @@
+{
+  "asdf": {
+    "BUILD_VERSION": "3.37.9",
+    "ALPINE_VERSION": "3.21.3",
+    "ASDF_VERSION": "v0.16.7"
+  }
+}

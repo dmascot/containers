@@ -12,7 +12,7 @@ jobs:
       image_dirs: ${{ steps.changed.outputs.image_dirs }}
       should_build: ${{ steps.changed.outputs.should_build }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -45,6 +45,31 @@ jobs:
     with:
       image: ${{ matrix.image }}
       branch: ${{ github.head_ref }}
+      docker_build_branch: ${{ github.head_ref }}
     secrets:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+
+  
+  squash-commits:
+    name: Squash Auto Commits
+    runs-on: ubuntu-latest
+    needs: build
+    if: needs.detect-changed-images.outputs.should_build == 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Squash commits
+        run: |
+          # Squash all commits into one
+          git reset --soft origin/main
+          git commit -m "chore(images): squash build changes for updated images"
+          git push --force

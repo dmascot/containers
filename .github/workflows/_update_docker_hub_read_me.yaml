@@ -1,0 +1,38 @@
+name: Reusable Docker Readme Publisher
+
+on:
+  workflow_call:
+    inputs:
+      repository:
+        description: "DockerHub repository to update (e.g. dmascot/asdf)"
+        required: true
+        type: string
+      readme_path:
+        description: "Path to the README.md file (e.g. images/asdf/README.md)"
+        required: true
+        type: string
+    secrets:
+      DOCKER_USERNAME:
+        required: true
+      DOCKER_TOKEN:
+        required: true
+
+jobs:
+  publish-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug
+        run: | 
+          echo "repo: ${{ inputs.repository }}"
+          echo "file:  ${{ inputs.readme_path }}"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Publish Docker Readme
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+          repository: ${{ inputs.repository }}
+          readme-filepath: ${{ inputs.readme_path }}

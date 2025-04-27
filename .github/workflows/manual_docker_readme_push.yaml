@@ -1,0 +1,23 @@
+name: Manual DockerHub Readme Push
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: "DockerHub repository name (e.g., dmascot/asdf)"
+        required: true
+        type: string
+      readme_path:
+        description: "Path to the README.md file (e.g., images/asdf/README.md)"
+        required: true
+        type: string
+
+jobs:
+  push-readme:
+    uses: ./.github/workflows/_update_docker_hub_read_me.yaml
+    with:
+      repository: ${{ inputs.repository }}
+      readme_path: ${{ inputs.readme_path }}
+    secrets:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
