@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-set -euo pipefail
+
+#Set flags for non-login shell only
+if [[ $- != *i* ]]; then
+  set -euo pipefail
+fi
 
 install_asdf(){
     local version="$1"
@@ -76,3 +80,5 @@ verify_asdf(){
     local version=$(asdf version)
     echo "ASDF Version: ${version}"
 }
+
+set +eu

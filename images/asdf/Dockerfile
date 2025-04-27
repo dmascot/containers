@@ -5,9 +5,9 @@ FROM alpine:${ALPINE_VERSION:-3.21.0}
 ARG ASDF_VERSION
 
 COPY asdf_helper.sh /usr/local/share/asdf_helper
-COPY asdfrc.sh /etc/profile.d/asdfrc.sh
+COPY asdfrc.sh /etc/bash/asdfrc.sh
 
-ENV ASDF_RC='/etc/profile.d/asdfrc.sh'
+ENV ASDF_RC='/etc/bash/asdfrc.sh'
 
 RUN apk add --no-cache bash git
 
