@@ -1,9 +1,5 @@
 name: Reuseable Create Pull Request
 
-permissions:
-  contents: write
-  pull-requests: write
-
 on:
   workflow_call:
     inputs:
@@ -18,35 +14,66 @@ on:
         required: false
         type: string
         default: "This PR contains updated build metadata."
+      base:
+        required: false
+        type: string
+        default: "main"
+
+    secrets:
+      ADMIN_TOKEN:
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   create-pr:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout caller repo (default branch)
+        uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
+          repository: ${{ github.repository }}
           fetch-depth: 0
 
-      - name: Ensure "delete branch on merge" is enabled
+      - name: Verify head branch exists on origin
         run: |
-          curl -X PATCH \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/${{ github.repository }} \
-            -d '{"delete_branch_on_merge": true}'
+          git ls-remote --heads origin "${{ inputs.branch }}" | grep -q . || {
+            echo "Branch '${{ inputs.branch }}' not found on origin for ${{ github.repository }}."
+            exit 1
+          }
 
-      - name: Ensure branch is up-to-date
-        run: |
-          git fetch origin ${{ inputs.branch }}
-          git pull origin ${{ inputs.branch }}
-
-      - name: Create PR using gh
+      - name: Enable "delete branch on merge" (best-effort)
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN || github.token }}
         run: |
-          gh pr create \
-              --title "${{ inputs.title }}" \
-              --body "${{ inputs.body }}" \
-              --base main \
-              --head "${{ inputs.branch }}"
+          current=$(gh api "/repos/${{ github.repository }}" -q '.delete_branch_on_merge')
+          if [ "$current" != "true" ]; then
+            gh api --method PATCH "/repos/${{ github.repository }}" -f delete_branch_on_merge=true
+            echo "Enabled delete_branch_on_merge"
+          else
+            echo "Already enabled"
+          fi || true
+
+      - name: Create or update PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          base="${{ inputs.base }}"
+          head="${{ inputs.branch }}"
+          if gh pr create --base "$base" --head "$head" \
+                --title "${{ inputs.title }}" \
+                --body  "${{ inputs.body }}"; then
+            echo "PR created."
+          else
+            num="$(gh pr list --head "$head" --state open --json number -q '.[0].number')"
+            if [ -n "$num" ]; then
+              gh pr edit "$num" --title "${{ inputs.title }}" --body "${{ inputs.body }}"
+              echo "PR #$num updated."
+            else
+              echo "Failed to create or find PR for $head"
+              exit 1
+            fi
+          fi
